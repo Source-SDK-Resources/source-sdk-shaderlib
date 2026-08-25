@@ -34,7 +34,9 @@ IShaderInit *CBaseShader::s_pShaderInit;
 int CBaseShader::s_nModulationFlags;
 CMeshBuilder *CBaseShader::s_pMeshBuilder;
 static ConVar mat_fullbright( "mat_fullbright","0", FCVAR_CHEAT );
+bool g_shaderConfigDumpEnable = false;
 	
+
 //-----------------------------------------------------------------------------
 // constructor
 //-----------------------------------------------------------------------------
@@ -283,7 +285,7 @@ CMeshBuilder* CBaseShader::MeshBuilder()
 //-----------------------------------------------------------------------------
 // Loads a texture
 //-----------------------------------------------------------------------------
-void CBaseShader::LoadTexture( int nTextureVar )
+void CBaseShader::LoadTexture( int nTextureVar, int nAdditionalCreationFlags)
 {
 	if ((!s_ppParams) || (nTextureVar == -1))
 		return;
@@ -291,7 +293,7 @@ void CBaseShader::LoadTexture( int nTextureVar )
 	IMaterialVar* pNameVar = s_ppParams[nTextureVar];
 	if( pNameVar && pNameVar->IsDefined() )
 	{
-		s_pShaderInit->LoadTexture( pNameVar, s_pTextureGroupName );
+		s_pShaderInit->LoadTexture( pNameVar, s_pTextureGroupName, nAdditionalCreationFlags);
 	}
 }
 
@@ -315,7 +317,7 @@ void CBaseShader::LoadBumpMap( int nTextureVar )
 //-----------------------------------------------------------------------------
 // Loads a cubemap
 //-----------------------------------------------------------------------------
-void CBaseShader::LoadCubeMap( int nTextureVar )
+void CBaseShader::LoadCubeMap( int nTextureVar, int nAdditionalCreationFlags)
 {
 	if ((!s_ppParams) || (nTextureVar == -1))
 		return;
@@ -323,7 +325,7 @@ void CBaseShader::LoadCubeMap( int nTextureVar )
 	IMaterialVar* pNameVar = s_ppParams[nTextureVar];
 	if( pNameVar && pNameVar->IsDefined() )
 	{
-		s_pShaderInit->LoadCubeMap( s_ppParams, pNameVar );
+		s_pShaderInit->LoadCubeMap( s_ppParams, pNameVar, nAdditionalCreationFlags);
 	}
 }
 
@@ -395,6 +397,21 @@ void CBaseShader::BindTexture( Sampler_t sampler1, Sampler_t sampler2, ITexture 
 	}
 }
 
+void CBaseShader::GetTextureDimensions(float* pOutWidth, float* pOutHeight, int nTextureVar)
+{
+	IMaterialVar* pTextureVar = s_ppParams[nTextureVar];
+	ITexture* pTexture = pTextureVar->GetTextureValue();
+	if (IsErrorTexture(pTexture))
+	{
+		*pOutWidth = 0;
+		*pOutHeight = 0;
+	}
+	else
+	{
+		*pOutWidth = pTexture->GetActualWidth();
+		*pOutHeight = pTexture->GetActualHeight();
+	}
+}
 
 //-----------------------------------------------------------------------------
 // Does the texture store translucency in its alpha channel?
